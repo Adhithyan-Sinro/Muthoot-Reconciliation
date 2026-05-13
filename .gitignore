@@ -1,0 +1,92 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# =========================
+# Package / Build artifacts
+# =========================
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# =========================
+# Jupyter / Data Science
+# =========================
+.ipynb_checkpoints/
+*.ipynb~
+
+# =========================
+# Logs & Temp files
+# =========================
+*.log
+*.tmp
+*.temp
+*.swp
+*.bak
+
+# =========================
+# OS / Editor files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.vscode/
+.idea/
+*.code-workspace
+
+# =========================
+# Secrets & Configs
+# =========================
+.env.*
+*.key
+*.pem
+*.crt
+secrets/
+config/local/
+
+# =========================
+# Data files (adjust as needed)
+# =========================
+data/raw/
+data/interim/
+data/processed/
+
+*.csv
+*.xlsx
+*.xls
+*.json
+*.parquet
+
+# =========================
+# Power BI (if applicable)
+# =========================
+*.pbix
+*.pbit
+*.pbip
+
+# =========================
+# Test & Coverage
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Misc
+# =========================
+.cache/
