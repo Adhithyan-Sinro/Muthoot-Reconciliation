@@ -11,7 +11,7 @@ from matching.exact_chq_amt import run_exact_chq_amt
 from matching.exact_cust_amt import run_exact_cust_amt
 from matching.delayed_accounting import run_delayed_accounting
 from matching.bank_charges import run_bank_charges
-from matching.contra_matching import run_contra_matching
+# from matching.contra_matching import run_contra_matching
 
 from db.write_back import write_reconciliation_bank
 from db.write_back import write_reconciliation_ledger
@@ -19,7 +19,8 @@ from db.write_back import write_reconciliation_ledger
 
 from matching.split_matching import run_split_matching
 from matching.difference_matching import (run_difference_matching)
-from matching.reversal_matching import (run_reversal_matching)
+# from matching.reversal_matching import (run_reversal_matching)
+from matching.offset_matching import run_offset_matching
 from matching.cash_chq_matching import (run_cheque_cash_matching)
 
 reconciliation_run_id = str(uuid.uuid4())
@@ -58,9 +59,16 @@ bank_df, ledger_df = run_exact_cust_amt(
     ledger_df
 )
 
-print("Running contra matching...")
+# print("Running contra matching...")
+#
+# bank_df, ledger_df = run_contra_matching(
+#     bank_df,
+#     ledger_df
+# )
 
-bank_df, ledger_df = run_contra_matching(
+print("Running offset matching...")
+
+bank_df, ledger_df = run_offset_matching(
     bank_df,
     ledger_df
 )
@@ -79,12 +87,12 @@ bank_df, ledger_df = run_difference_matching(
     ledger_df
 )
 
-print("Running reversal matching...")
-
-bank_df, ledger_df = run_reversal_matching(
-    bank_df,
-    ledger_df
-)
+# print("Running reversal matching...")
+#
+# bank_df, ledger_df = run_reversal_matching(
+#     bank_df,
+#     ledger_df
+# )
 
 print("Running narration matching...")
 
@@ -112,6 +120,6 @@ print("Writing reconciliation results...")
 
 write_reconciliation_bank(bank_df)
 write_reconciliation_ledger(ledger_df)
-write_narration_matches(narration_matches_df)
+# write_narration_matches(narration_matches_df)
 
 print("Reconciliation completed successfully")
