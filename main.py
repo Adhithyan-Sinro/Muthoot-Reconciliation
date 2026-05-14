@@ -11,10 +11,12 @@ from matching.exact_chq_amt import run_exact_chq_amt
 from matching.exact_cust_amt import run_exact_cust_amt
 from matching.delayed_accounting import run_delayed_accounting
 from matching.bank_charges import run_bank_charges
+from matching.branch_balancing import run_branch_balancing
 # from matching.contra_matching import run_contra_matching
 
 from db.write_back import write_reconciliation_bank
 from db.write_back import write_reconciliation_ledger
+from utils.helper import initialize_reconciliation_metadata
 
 
 from matching.split_matching import run_split_matching
@@ -37,6 +39,9 @@ ledger_df = normalize_ledger(ledger_df)
 
 bank_df["is_reconciled"] = False
 ledger_df["is_reconciled"] = False
+
+bank_df = initialize_reconciliation_metadata(bank_df)
+ledger_df = initialize_reconciliation_metadata(ledger_df)
 
 print("Running exact date amount matching...")
 
@@ -112,6 +117,13 @@ bank_df, ledger_df = run_delayed_accounting(
 print("Running bank charges matching...")
 
 bank_df, ledger_df = run_bank_charges(
+    bank_df,
+    ledger_df
+)
+
+print("Running branch balancing reconciliation...")
+
+bank_df, ledger_df = run_branch_balancing(
     bank_df,
     ledger_df
 )
