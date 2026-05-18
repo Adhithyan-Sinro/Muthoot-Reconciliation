@@ -11,6 +11,7 @@ from utils.remark_builder import (
 
 AMOUNT_TOLERANCE = 0.01
 DATE_TOLERANCE_DAYS = 3
+MONTH_DATE_COLUMN = "txn_date"
 
 BRANCH_COLUMN_CANDIDATES = [
     "branch_id",
@@ -114,6 +115,30 @@ def _branch_label(branch_values):
         f"{column}={value}"
         for column, value in branch_values.items()
     )
+
+
+def _month_start(value):
+    if pd.isna(value):
+        return pd.NaT
+
+    return pd.Timestamp(value).to_period("M").to_timestamp()
+
+
+def _month_label(month_start):
+    month_end = month_start + pd.offsets.MonthEnd(0)
+    return (
+        f"{month_start.strftime('%Y-%m-%d')} to "
+        f"{month_end.strftime('%Y-%m-%d')}"
+    )
+
+
+def _same_month_mask(df, month_start):
+    if pd.isna(month_start):
+        return pd.Series(False, index=df.index)
+
+    txn_months = df[MONTH_DATE_COLUMN].apply(_month_start)
+
+    return txn_months == month_start
 
 
 def _mark_soft_match(bank_df, ledger_df, bank_idx, ledger_idx, branch_label):
@@ -282,18 +307,38 @@ def _run_branch_balance(
 ):
     unmatched_bank = _unmatched(bank_df)
 
+    if (
+        MONTH_DATE_COLUMN not in bank_df.columns
+        or MONTH_DATE_COLUMN not in ledger_df.columns
+    ):
+        print(
+            "Branch balancing skipped: txn_date column required for "
+            "month-wise branch balancing"
+        )
+        return bank_df, ledger_df
+
+    unmatched_bank = unmatched_bank.copy()
+    unmatched_bank["_branch_balance_month"] = unmatched_bank[
+        MONTH_DATE_COLUMN
+    ].apply(_month_start)
+    unmatched_bank = unmatched_bank[
+        unmatched_bank["_branch_balance_month"].notna()
+    ]
+
     for branch_key, bank_group in unmatched_bank.groupby(
-        branch_columns,
+        branch_columns + ["_branch_balance_month"],
         dropna=False
     ):
         if not isinstance(branch_key, tuple):
             branch_key = (branch_key,)
 
-        branch_values = dict(zip(branch_columns, branch_key))
+        branch_values = dict(zip(branch_columns, branch_key[:-1]))
+        branch_month = branch_key[-1]
 
         ledger_group = ledger_df[
             (ledger_df["is_reconciled"] == False)
             & _same_branch_mask(ledger_df, branch_values)
+            & _same_month_mask(ledger_df, branch_month)
         ]
 
         if bank_group.empty or ledger_group.empty:
@@ -309,8 +354,12 @@ def _run_branch_balance(
         bank_indices = list(bank_group.index)
         ledger_indices = list(ledger_group.index)
         row_count = len(bank_indices) + len(ledger_indices)
+        branch_month_label = (
+            f"{_branch_label(branch_values)}, "
+            f"month={_month_label(branch_month)}"
+        )
         remarks = branch_balanced(
-            _branch_label(branch_values),
+            branch_month_label,
             bank_total,
             ledger_total,
             row_count
